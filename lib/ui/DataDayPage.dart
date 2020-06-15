@@ -37,8 +37,12 @@ class DataDayPage extends StatelessWidget {
                   query: Database.dataRef,
                   itemBuilder: (context, snap, anim, index) {
                     var map = snap.value;
-                    DateTime now = DateTime.now();
-                    return (map['day'].toString() == now.toString())
+                    String day = now.day.toString() +
+                        "/" +
+                        now.month.toString() +
+                        "/" +
+                        now.year.toString();
+                    return (map['day'].toString() == day)
                         ? SizeTransition(
                             sizeFactor: anim, child: _showData(map, index))
                         : _bulidTextDataEmpty(index);
