@@ -21,8 +21,3 @@ class ManageCropPage extends StatelessWidget {
 
 
 
-Future<Map<String,dynamic>> getData() async {
-    var snap = await Database.dataRef.once();
-    return snap.value;
-}
-
