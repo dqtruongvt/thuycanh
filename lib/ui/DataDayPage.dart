@@ -1,12 +1,31 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/database/Database.dart';
+import 'package:thuycanh/model/Data.dart';
+import 'package:flutter/rendering.dart';
 
-class DataDayPage extends StatelessWidget {
+class DataDayPage extends StatefulWidget {
+  @override
+  _DataDayPageState createState() => _DataDayPageState();
+}
+
+class _DataDayPageState extends State<DataDayPage> {
+  List<Data> data;
+  @override
+  void initState() {
+    data = List<Data>();
+    super.initState();
+    Database.dataRef.onChildAdded.listen((event) {
+      fetchData(event.snapshot);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
+    print(data);
     return Container(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,
@@ -32,22 +51,7 @@ class DataDayPage extends StatelessWidget {
           ),
 
           //Build list data
-          Flexible(
-              child: FirebaseAnimatedList(
-                  query: Database.dataRef,
-                  itemBuilder: (context, snap, anim, index) {
-                    var map = snap.value;
-                    String day = now.day.toString() +
-                        "/" +
-                        now.month.toString() +
-                        "/" +
-                        now.year.toString();
-                    return (map['day'].toString() == day)
-                        ? SizeTransition(
-                            sizeFactor: anim, child: _showData(map, index))
-                        : _bulidTextDataEmpty(index);
-                  }),
-              flex: 4),
+          Flexible(child: _buildData(data), flex: 4),
 
           //Build result test
           Flexible(
@@ -128,53 +132,63 @@ class DataDayPage extends StatelessWidget {
       ),
     );
   }
+
+  void fetchData(DataSnapshot snapshot) {
+    DateTime now = DateTime.now();
+    String day = '${now.day}/${now.month}/${now.year}';
+    if (day == snapshot.value['day']) {
+      setState(() {
+        data.add(Data(
+          snapshot.value['day'].toString(),
+          snapshot.value['time'].toString(),
+          double.parse(snapshot.value['ph'].toString()),
+          double.parse(snapshot.value['tds'].toString()),
+          double.parse(snapshot.value['temperature'].toString()),
+        ));
+      });
+    }
+  }
 }
 
-_bulidTextDataEmpty(int index) {
-  List<Widget> list = List<Widget>();
-  if (index == 0)
-    list.add(Text(
-      'Hôm nay bạn chưa bơm lần nào. Dữ liệu trống',
-      textAlign: TextAlign.left,
-      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
-    ));
-  return Column(children: list);
-}
-
-_showData(Map map, int index) {
-  List<Widget> list = List<Widget>();
-  if (index == 0) {
-    list = [];
-    //Build list title
+_buildData(List<Data> data) {
+  List<Widget> list = [];
+  data.asMap().forEach((index, value) {
+    if (index == 0) {
+      list.add(DefaultTextStyle(
+        style: TEXT_STYLE,
+        child: Row(
+          children: <Widget>[
+            Expanded(child: Text('Thời gian'), flex: 2),
+            Expanded(child: Text('pH'), flex: 1),
+            Expanded(child: Text('tds'), flex: 1),
+            Expanded(child: Text('nhiệt độ'), flex: 2),
+          ],
+        ),
+      ));
+    }
     list.add(DefaultTextStyle(
       style: TEXT_STYLE,
       child: Row(
         children: <Widget>[
-          Expanded(child: Text('Thời gian'), flex: 3),
-          Expanded(child: Text('pH'), flex: 2),
-          Expanded(child: Text('tds'), flex: 2),
-          Expanded(child: Text('nhiệt độ'), flex: 3),
+          Expanded(child: Text('${value.time}'), flex: 2),
+          Expanded(child: Text('${value.ph}'), flex: 1),
+          Expanded(child: Text('${value.tds}'), flex: 1),
+          Expanded(
+            child: Text('${value.temperature}'),
+            flex: 2,
+          ),
         ],
       ),
     ));
-  }
+  });
 
-  list.add(DefaultTextStyle(
-    style: TEXT_STYLE,
-    child: Row(
-      children: <Widget>[
-        Expanded(child: Text('${map['time']}'), flex: 3),
-        Expanded(child: Text('${map['ph']}'), flex: 2),
-        Expanded(child: Text('${map['tds']}'), flex: 2),
-        Expanded(
-          child: Text('${map['temperature']}'),
-          flex: 3,
-        ),
-      ],
-    ),
-  ));
-
-  return Column(
-    children: list,
-  );
+  return data.isNotEmpty
+      ? Container(
+          padding: EdgeInsets.all(8),
+          child: Column(
+            children: list,
+          ),
+        )
+      : Text('Hôm nay bạn chưa bơm lần nào. Dữ liệu rỗng',
+          style: TextStyle(fontSize: 30));
 }
