@@ -1,4 +1,3 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/database/Database.dart';
@@ -6,7 +5,6 @@ import 'package:charts_flutter/flutter.dart' as charts;
 import 'package:thuycanh/model/PhData.dart';
 import 'package:thuycanh/model/TdsData.dart';
 import 'package:thuycanh/model/TemperatureData.dart';
-
 
 // ignore: must_be_immutable
 class DataCropPage extends StatelessWidget {
@@ -18,22 +16,35 @@ class DataCropPage extends StatelessWidget {
         decoration: BoxDecoration(gradient: BACKGROUND),
         child: Column(
           children: <Widget>[
-            Flexible(child: _buildList(), flex: 2),
-            Flexible(child: _buildChart(),flex: 6)
+            //Build list data
+            Flexible(
+                child: FutureBuilder<Map>(
+                  future: getData(),
+                  builder: (context, snap) {
+                    var map = snap.data ?? {};
+                    return _buildDataFromMap(map);
+                  },
+                ),
+                flex: 9),
+
+            //Build button show chart
+            Flexible(
+                child: FutureBuilder<Map>(
+                    future: getData(),
+                    builder: (context, snap) {
+                      var map = snap.data ?? {};
+                      return _buildChartFromMap(context, map);
+                    }),
+                flex: 1)
           ],
         ));
   }
 }
 
-Future<DataSnapshot> getSnap() async {
-  var snap = await Database.dataRef.once();
-  return snap;
-}
-
 Future<Map> getData() async {
   Map map = Map();
   Map count = Map();
-  var snap = await getSnap();
+  var snap = await Database.getDataRef();
   (snap.value as List<dynamic>).forEach((item) {
     var day = item['day'];
     var ph = double.parse(item['ph'].toString());
@@ -75,27 +86,44 @@ Future<Map> getData() async {
   return map;
 }
 
-Widget _buildList() {
-  return FutureBuilder<Map>(
-    future: getData(),
-    builder: (context, snap) {
-      var map = snap.data ?? {};
-      return _buildDataFromMap(map);
-    },
+_buildDataFromMap(Map map) {
+  List<Widget> list = [];
+  list.add(DefaultTextStyle(
+    style: TEXT_STYLE,
+    child: Row(
+      children: <Widget>[
+        Expanded(child: Text('Ngày'), flex: 2),
+        Expanded(child: Text('pH'), flex: 1),
+        Expanded(child: Text('tds'), flex: 1),
+        Expanded(child: Text('nhiệt độ'), flex: 2),
+      ],
+    ),
+  ));
+  map.forEach((key, value) {
+    list.add(DefaultTextStyle(
+      style: TEXT_STYLE,
+      child: Row(
+        children: <Widget>[
+          Expanded(child: Text('$key'), flex: 2),
+          Expanded(child: Text('${value['ph']}'), flex: 1),
+          Expanded(child: Text('${value['tds']}'), flex: 1),
+          Expanded(
+            child: Text('${value['temperature']}'),
+            flex: 2,
+          ),
+        ],
+      ),
+    ));
+  });
+  return Container(
+    padding: EdgeInsets.all(8),
+    child: Column(
+      children: list,
+    ),
   );
 }
 
-Widget _buildChart() {
-  return FutureBuilder<Map>(
-      future: getData(),
-      builder: (context, snap) {
-        var map = snap.data ?? {};
-
-        return _buildChartFromMap(map);
-      });
-}
-
-Widget _buildChartFromMap(Map map) {
+_buildChartFromMap(BuildContext context, Map map) {
   List<PhData> pHData = [];
   List<TdsData> tdsData = [];
   List<TemperatureData> temData = [];
@@ -136,84 +164,64 @@ Widget _buildChartFromMap(Map map) {
         colorFn: (TemperatureData data, _) => data.barColor)
   ];
 
-  return Container(
-    child: Column(
-      children: <Widget>[
-        Flexible(
-          child: charts.LineChart(
-            seriesPh,
-            behaviors: [
-              charts.ChartTitle('pH chart',
-                  behaviorPosition: charts.BehaviorPosition.bottom,
-                  titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
-                  titleOutsideJustification:
-                      charts.OutsideJustification.middleDrawArea),
-            ],
-            animate: true,
-          ),
-        ),
-        Flexible(
-          child: charts.LineChart(
-            seriesTds,
-            behaviors: [
-              charts.ChartTitle('Tds chart',
-                  behaviorPosition: charts.BehaviorPosition.bottom,
-                  titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
-                  titleOutsideJustification:
-                      charts.OutsideJustification.middleDrawArea),
-            ],
-            animate: true,
-          ),
-        ),
-        Flexible(
-          child: charts.LineChart(
-            seriesTem,
-            behaviors: [
-              charts.ChartTitle('Temperature chart',
-                  behaviorPosition: charts.BehaviorPosition.bottom,
-                  titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
-                  titleOutsideJustification:
-                      charts.OutsideJustification.middleDrawArea),
-            ],
-            animate: true,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-_buildDataFromMap(Map map) {
-  List<Widget> list = [];
-  list.add(DefaultTextStyle(
-    style: TEXT_STYLE,
-    child: Row(
-      children: <Widget>[
-        Expanded(child: Text('Day'), flex: 2),
-        Expanded(child: Text('pH'), flex: 1),
-        Expanded(child: Text('tds'), flex: 1),
-        Expanded(child: Text('temperature'), flex: 2),
-      ],
-    ),
-  ));
-  map.forEach((key, value) {
-    list.add(DefaultTextStyle(
-      style: TEXT_STYLE,
-      child: Row(
+  var dialog = Dialog(
+    child: Container(
+      child: Column(
         children: <Widget>[
-          Expanded(child: Text('$key'), flex: 2),
-          Expanded(child: Text('${value['ph']}'), flex: 1),
-          Expanded(child: Text('${value['tds']}'), flex: 1),
-          Expanded(
-            child: Text('${value['temperature']}'),
-            flex: 2,
+          Flexible(
+            child: charts.LineChart(
+              seriesPh,
+              behaviors: [
+                charts.ChartTitle('pH chart',
+                    behaviorPosition: charts.BehaviorPosition.bottom,
+                    titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
+                    titleOutsideJustification:
+                        charts.OutsideJustification.middleDrawArea),
+              ],
+              animate: true,
+            ),
+          ),
+          Flexible(
+            child: charts.LineChart(
+              seriesTds,
+              behaviors: [
+                charts.ChartTitle('Tds chart',
+                    behaviorPosition: charts.BehaviorPosition.bottom,
+                    titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
+                    titleOutsideJustification:
+                        charts.OutsideJustification.middleDrawArea),
+              ],
+              animate: true,
+            ),
+          ),
+          Flexible(
+            child: charts.LineChart(
+              seriesTem,
+              behaviors: [
+                charts.ChartTitle('Temperature chart',
+                    behaviorPosition: charts.BehaviorPosition.bottom,
+                    titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
+                    titleOutsideJustification:
+                        charts.OutsideJustification.middleDrawArea),
+              ],
+              animate: true,
+            ),
           ),
         ],
       ),
-    ));
-  });
-  return Column(
-    children: list,
+    ),
+  );
+
+  return FlatButton(
+    onPressed: () {
+      showDialog(context: context, builder: (_) => dialog);
+    },
+    child: Container(
+      child: Text('Show chart'),
+      alignment: Alignment.center,
+      color: Colors.blue,
+      width: 200,
+      height: 50,
+    ),
   );
 }
-

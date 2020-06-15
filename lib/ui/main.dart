@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/ui/DataDayPage.dart';
 
 import 'package:thuycanh/ui/DataCropPage.dart';
@@ -19,6 +18,7 @@ class MyApp extends StatelessWidget {
       home: Dashboard(),
 
     );
+    
   }
 }
 

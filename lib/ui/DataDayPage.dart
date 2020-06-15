@@ -1,17 +1,12 @@
-import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_database/ui/firebase_animated_list.dart';
 import 'package:flutter/material.dart';
 import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/database/Database.dart';
 
-
-
-
 class DataDayPage extends StatelessWidget {
-
   @override
   Widget build(BuildContext context) {
-
+    DateTime now = DateTime.now();
     return Container(
       width: MediaQuery.of(context).size.width,
       height: MediaQuery.of(context).size.height,
@@ -22,42 +17,130 @@ class DataDayPage extends StatelessWidget {
 
       child: Column(
         children: <Widget>[
-          Flexible(child: _buildTitle(),flex : 1),
-          SizedBox(height: 20,),
-          Flexible(child: _buildListData(), flex: 4),
-          Flexible(child:_buildResultTest(), flex: 3),
-          Flexible(child:_buildButtonTest(), flex: 2),
+          //Build title
+          Flexible(
+              child: Container(
+                alignment: Alignment.center,
+                child: Text(
+                  '${now.day}/${now.month}/${now.year}',
+                  style: TextStyle(fontSize: 36, color: Colors.black),
+                ),
+              ),
+              flex: 1),
+          SizedBox(
+            height: 20,
+          ),
+
+          //Build list data
+          Flexible(
+              child: FirebaseAnimatedList(
+                  query: Database.dataRef,
+                  itemBuilder: (context, snap, anim, index) {
+                    var map = snap.value;
+                    DateTime now = DateTime.now();
+                    return (map['day'].toString() == now.toString())
+                        ? SizeTransition(
+                            sizeFactor: anim, child: _showData(map, index))
+                        : _bulidTextDataEmpty(index);
+                  }),
+              flex: 4),
+
+          //Build result test
+          Flexible(
+              child: FirebaseAnimatedList(
+                  query: Database.testRef,
+                  itemBuilder: (context, snap, animation, index) {
+                    String tds = snap.value['tds'].toString();
+                    String ph = snap.value['ph'].toString();
+                    String temperature = snap.value['temperature'].toString();
+                    bool onTest = snap.value['onTest'];
+                    if (!onTest) {
+                      return Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: Text(
+                          'Bạn chưa lấy mẫu ấn vào nút play để lấy mẫu ngay bạn sẽ kết quả sau vài phút',
+                          style: TextStyle(
+                              fontSize: 20.0,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    } else if (tds == '0' && ph == '0' && temperature == '0') {
+                      return Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    } else
+                      return Padding(
+                          padding: EdgeInsets.all(20.0),
+                          child: Text(
+                            'pH : $ph     tds:$tds    Nhiệt độ:$temperature ',
+                            style: TextStyle(
+                                fontSize: 20.0,
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold),
+                          ));
+                  }),
+              flex: 3),
+
+          //Build button test
+          Flexible(
+              child: FirebaseAnimatedList(
+                  query: Database.testRef,
+                  itemBuilder: (context, snap, animation, index) {
+                    bool onTest = snap.value['onTest'];
+                    String result =
+                        onTest ? 'Kết thúc lấy mẫu' : 'Lấy mẫu ngay';
+                    Icon icon =
+                        onTest ? Icon(Icons.pause) : Icon(Icons.play_arrow);
+
+                    return IconButton(
+                      onPressed: () {
+                        if (!onTest) {
+                          Database.testRef
+                              .child("data")
+                              .child('onTest')
+                              .set(true);
+                        } else {
+                          Database.testRef
+                              .child("data")
+                              .child('onTest')
+                              .set(false);
+                          Database.testRef.child("data").child('ph').set(0);
+                          Database.testRef.child("data").child('tds').set(0);
+                          Database.testRef
+                              .child("data")
+                              .child('temperature')
+                              .set(0);
+                        }
+                      },
+                      icon: icon,
+                      iconSize: 70.0,
+                      tooltip: result,
+                      color: Colors.blue,
+                    );
+                  }),
+              flex: 2),
         ],
       ),
     );
   }
 }
 
-_buildTitle() {
-  DateTime now = DateTime.now();
-  return Container(
-    alignment: Alignment.center,
-    child: Text(
-          '${now.day}/${now.month}/${now.year}',
-          style: TextStyle(fontSize: 36, color: Colors.black),
-        ),
-  );
-}
-
-_buildListData() {
-  return FirebaseAnimatedList(
-          query: Database.dataRef,
-          itemBuilder: (context, snap, anim, index) {
-            var map = snap.value;
-            return SizeTransition(
-                sizeFactor: anim, child: showData(map, index));
-          });
-}
-
-showData(Map map, int index) {
+_bulidTextDataEmpty(int index) {
   List<Widget> list = List<Widget>();
-  if (index == 0){
-     list = [];
+  if (index == 0)
+    list.add(Text(
+      'Hôm nay bạn chưa bơm lần nào. Dữ liệu trống',
+      textAlign: TextAlign.left,
+      style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+    ));
+  return Column(children: list);
+}
+
+_showData(Map map, int index) {
+  List<Widget> list = List<Widget>();
+  if (index == 0) {
+    list = [];
     //Build list title
     list.add(DefaultTextStyle(
       style: TEXT_STYLE,
@@ -66,7 +149,7 @@ showData(Map map, int index) {
           Expanded(child: Text('Thời gian'), flex: 3),
           Expanded(child: Text('pH'), flex: 2),
           Expanded(child: Text('tds'), flex: 2),
-          Expanded(child: Text('nhiẹt độ'), flex: 3),
+          Expanded(child: Text('nhiệt độ'), flex: 3),
         ],
       ),
     ));
@@ -90,62 +173,4 @@ showData(Map map, int index) {
   return Column(
     children: list,
   );
-
-}
-
-_buildResultTest() {
-  return FirebaseAnimatedList(
-          query: Database.testRef,
-          itemBuilder: (context, snap, animation, index) {
-            String tds = snap.value['tds'].toString();
-            String ph = snap.value['ph'].toString();
-            String temperature = snap.value['temperature'].toString();
-            bool onTest = snap.value['onTest'];
-            if (!onTest) {
-              return Padding(
-                padding: EdgeInsets.all(20.0),
-                child: Text(
-                  'Bạn chưa lấy mẫu ấn vào nút play để lấy mẫu ngay bạn sẽ kết quả sau vài phút',
-                  style: TextStyle(fontSize: 20.0, color: Colors.black,fontWeight: FontWeight.bold),
-                ),
-              );
-            } else if (tds == '0' && ph == '0' && temperature == '0') {
-              return Center(
-                child: CircularProgressIndicator(),
-              );
-            } else
-              return Padding(
-                  padding: EdgeInsets.all(20.0),
-                  child: Text(
-                    'pH : $ph     tds:$tds    Nhiệt độ:$temperature ',
-                    style: TextStyle(fontSize: 20.0, color: Colors.black, fontWeight: FontWeight.bold),
-                  ));
-          });
-}
-
-_buildButtonTest() {
-  return FirebaseAnimatedList(
-          query: Database.testRef,
-          itemBuilder: (context, snap, animation, index) {
-            bool onTest = snap.value['onTest'];
-            String result = onTest ? 'Kết thúc lấy mẫu' : 'Lấy mẫu ngay';
-            Icon icon = onTest ? Icon(Icons.pause) : Icon(Icons.play_arrow);
-
-            return IconButton(
-              onPressed: () {
-                if (!onTest) {
-                  Database.testRef.child("data").child('onTest').set(true);
-                } else {
-                  Database.testRef.child("data").child('onTest').set(false);
-                  Database.testRef.child("data").child('ph').set(0);
-                  Database.testRef.child("data").child('tds').set(0);
-                  Database.testRef.child("data").child('temperature').set(0);
-                }
-              },
-              icon: icon,
-              iconSize: 70.0,
-              tooltip: result,
-              color: Colors.blue,
-            );
-          });
 }
