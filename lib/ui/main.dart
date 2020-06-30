@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:thuycanh/ui/DataDayPage.dart';
-
-import 'package:thuycanh/ui/DataCropPage.dart';
 import 'package:thuycanh/ui/ManageCropPage.dart';
 
 void main() {
@@ -14,11 +12,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(primaryColor: Colors.blue),
+      theme: ThemeData(
+        primaryColor: Colors.blue,
+      ),
       home: Dashboard(),
-
     );
-    
   }
 }
 
@@ -29,8 +27,8 @@ class Dashboard extends StatefulWidget {
 
 class _DashboardState extends State<Dashboard> {
   int _index = 0;
-  final List<Widget> layouts = [DataDayPage(), DataCropPage(), ManageCropPage()];
-  final List<Widget> titles = [Text('Dữ liệu ngày'), Text('Dữ liệu vụ'), Text('Quản lí vụ')];
+  final List<Widget> layouts = [DataDayPage(), ManageCropPage()];
+  final List<Widget> titles = [Text('Dữ liệu ngày'), Text('Quản lí vụ')];
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +56,8 @@ class _DashboardState extends State<Dashboard> {
                   ),
                   title: titles[0]),
               BottomNavigationBarItem(
-                  icon: Icon(Icons.view_comfy, color: Colors.blue),
-                  title:titles[1]),
-              BottomNavigationBarItem(
                   icon: Icon(Icons.library_books, color: Colors.blue),
-                  title: titles[2])
+                  title: titles[1])
             ]));
   }
 }
