@@ -19,46 +19,55 @@ class ManageCropPage extends StatefulWidget {
 class _ManageCropPageState extends State<ManageCropPage> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
+    return Stack(
+      children: <Widget>[
+        Container(
           decoration: BoxDecoration(gradient: BACKGROUND),
-          child: SafeArea(
-            child: Column(children: <Widget>[
-              StreamBuilder(
-                stream: Database.saveRef.child('data').onValue,
-                builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                  return snapshot.hasData
-                      ? snapshot.data.snapshot.value == null
-                          ? Text('Bạn chưa có vụ mùa nào. Dữ liệu trống',
-                              style:
-                                  TextStyle(fontSize: 32, color: Colors.white))
-                          : _buildCropFromData(snapshot.data.snapshot.value)
-                      : CircularProgressIndicator();
-                },
-              ),
-              Container(
-                margin: EdgeInsets.all(8),
-                child: Row(
-                  children: <Widget>[
-                    Expanded(
-                        child: _buildFlatButton(
-                            content: 'TẠO VỤ',
-                            onPressed: () {
-                              _onCreateCrop(context);
-                            })),
-                    Expanded(
-                        child: _buildFlatButton(
-                            content: 'KẾT THÚC',
-                            onPressed: () {
-                              _onFinishCrop(context);
-                            })),
-                  ],
+        ),
+        CustomScrollView(
+          slivers: <Widget>[
+            SliverList(
+              delegate: SliverChildListDelegate([
+                Container(
+                  margin: EdgeInsets.all(8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: <Widget>[
+                      Expanded(
+                          child: _buildFlatButton(
+                              content: 'TẠO VỤ',
+                              onPressed: () {
+                                _onCreateCrop(context);
+                              })),
+                      Expanded(
+                          child: _buildFlatButton(
+                              content: 'KẾT THÚC',
+                              onPressed: () {
+                                _onFinishCrop(context);
+                              })),
+                    ],
+                  ),
                 ),
-              ),
-            ]),
-          )),
+                SafeArea(
+                  child: StreamBuilder(
+                    stream: Database.saveRef.child('data').onValue,
+                    builder:
+                        (BuildContext context, AsyncSnapshot<Event> snapshot) {
+                      return snapshot.hasData
+                          ? snapshot.data.snapshot.value == null
+                              ? Text('Bạn chưa có vụ mùa nào. Dữ liệu trống',
+                                  style: TextStyle(
+                                      fontSize: 32, color: Colors.white))
+                              : _buildCropFromData(snapshot.data.snapshot.value)
+                          : CircularProgressIndicator();
+                    },
+                  ),
+                ),
+              ]),
+            )
+          ],
+        )
+      ],
     );
   }
 
@@ -137,7 +146,7 @@ class _ManageCropPageState extends State<ManageCropPage> {
   _buildFlatButton(
           {@required String content,
           @required VoidCallback onPressed,
-          Color color = Colors.blue,
+          Color color = Colors.black,
           double textSize = 10,
           Color textColor = Colors.white,
           double height = 50,
@@ -192,13 +201,16 @@ class _ManageCropPageState extends State<ManageCropPage> {
 
 _buildCropFromData(Map map) {
   List<Widget> list = [];
-  map.forEach((key, value) {
-    var total = key.toString()[key.toString().length - 1];
-    var startId = value['startId'];
 
-    var endId = value['endId'];
+  for (int i = map.length - 1; i >= 0; i--) {
+    var total = map.keys
+        .elementAt(i)
+        .toString()[map.keys.elementAt(i).toString().length - 1];
+    var startId = map.values.elementAt(i)['startId'];
+    var endId = map.values.elementAt(i)['endId'];
     list.add(CropWidget(total: total, startId: startId, endId: endId));
-  });
+  }
+
   return Column(
     children: list,
   );
@@ -243,10 +255,11 @@ class _CropWidgetState extends State<CropWidget> {
 
                       var startId = int.parse(data['startId'].toString());
                       var endId = int.parse(data['endId'].toString());
-                      if (endId == -1) endId = data.length - 1;
 
                       Map map = snap2.value;
                       Map sortMap = {};
+                      //Fix there
+                      if (endId == -1) endId = map.length - 1;
                       sortMap.addAll(_sortMapByDay(map));
                       var index = -1;
                       Map result = Map();

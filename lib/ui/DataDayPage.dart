@@ -37,7 +37,13 @@ class _DataDayPageState extends State<DataDayPage> {
             ),
             Text(
               'Dữ liệu hiện tại',
-              style: TextStyle(fontSize: 25, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 25,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
+            ),
+            SizedBox(
+              height: 10,
             ),
             StreamBuilder(
               stream: Database.testRef.onValue,
@@ -84,9 +90,10 @@ class _DataDayPageState extends State<DataDayPage> {
               },
             ),
             SizedBox(
-              height: 20,
+              height: 30,
             ),
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
                 Text(
                   'Bơm',
@@ -110,11 +117,19 @@ class _DataDayPageState extends State<DataDayPage> {
                 ),
               ],
             ),
+            SizedBox(
+              height: 30,
+            ),
             Text(
               'Dữ liệu trong ngày',
-              style: TextStyle(fontSize: 25, color: Colors.white),
+              style: TextStyle(
+                  fontSize: 25,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold),
             ),
-
+            SizedBox(
+              height: 10,
+            ),
             //Build list data
             StreamBuilder(
               stream: Database.dataRef.onValue,
