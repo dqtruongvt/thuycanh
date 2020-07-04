@@ -160,7 +160,7 @@ _buildDataFromListCrop(List<Map<String, dynamic>> crops, BuildContext context) {
               List<PhData> phData = [];
               List<TdsData> tdsData = [];
               List<TemperatureData> temperatureData = [];
-              var docs = query.documents;
+              var docs =(endId == -1) ?  query.documents.sublist(startId) : query.documents.sublist(startId, endId+1) ;
 
               //Tinh data cho 3 gia tri do thi
               docs.forEach((doc) {
@@ -225,10 +225,10 @@ _buildData(List<Map<String, dynamic>> listData, List<String> listId) {
       style: TextStyle(fontWeight: FontWeight.bold),
       child: Row(
         children: [
-          Expanded(child: Text('Ngày')),
-          Expanded(child: Text('pH')),
-          Expanded(child: Text('TDS(ppm)')),
-          Expanded(child: Text('Nhiệt độ (°C)')),
+          Expanded(child: Text('Ngày'), flex: 3,),
+          Expanded(child: Text('pH'), flex: 2,),
+          Expanded(child: Text('TDS(ppm)'), flex: 2,),
+          Expanded(child: Text('Nhiệt độ(°C)'), flex: 3,),
         ],
       )));
   listData.forEach((map) {
@@ -236,10 +236,10 @@ _buildData(List<Map<String, dynamic>> listData, List<String> listId) {
         style: DATA_STYLE,
         child: Row(
           children: [
-            Expanded(child: Text('${listId[listData.indexOf(map)]}')),
-            Expanded(child: Text('${map['ph']}')),
-            Expanded(child: Text('${map['tds']}')),
-            Expanded(child: Text('${map['temperature']}')),
+            Expanded(child: Text('${listId[listData.indexOf(map)]}'), flex:  3,),
+            Expanded(child: Text('${map['ph']}'), flex: 2,),
+            Expanded(child: Text('${map['tds']}'), flex:2),
+            Expanded(child: Text('${map['temperature']}'), flex: 3,),
           ],
         )));
   });
