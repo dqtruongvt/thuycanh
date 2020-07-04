@@ -1,9 +1,10 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class Database {
-  static DatabaseReference ref = FirebaseDatabase.instance.reference();
-  static DatabaseReference dataRef = ref.child("data");
-  static DatabaseReference testRef = ref.child("test");
-  static DatabaseReference saveRef = ref.child("save");
-  static DatabaseReference cropRef = ref.child("crop");
-}
+final firestore = Firestore.instance;
+final saveCaculateRef = firestore.document('caculate/save');
+final saveRef = firestore.collection('save');
+final cropRef = firestore.collection('crop');
+final orderCropRef = firestore.collection('crop').orderBy('timestamp');
+final dataTestRef = firestore.collection('test').document('data');
+final pumpTestRef = firestore.collection('test').document('pump');
+final orderDataRef = firestore.collection('data').orderBy('timestamp');

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:thuycanh/ui/pages/DataDayPage.dart';
-import 'package:thuycanh/ui/pages/ManageCropPage.dart';
+import 'ui/pages/DataDayPage.dart';
+import 'ui/pages/ManageCropPage.dart';
 
 void main() {
   runApp(MyApp());

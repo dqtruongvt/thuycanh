@@ -6,33 +6,17 @@ import '../../model/TemperatureData.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
 class ChartWidget extends StatelessWidget {
-  final Map map;
-
-  const ChartWidget({Key key, this.map}) : super(key: key);
+  final List<PhData> phData;
+  final List<TdsData> tdsData;
+  final List<TemperatureData> temperatureData;
+  const ChartWidget({Key key, this.phData, this.tdsData, this.temperatureData})
+      : super(key: key);
   @override
   Widget build(BuildContext context) {
-    List<PhData> pHData = [];
-    List<TdsData> tdsData = [];
-    List<TemperatureData> temData = [];
-
-    var data = map.values.toList();
-    data.asMap().forEach((index, value) {
-      pHData.add(PhData(index.toDouble(), double.parse(value['ph'].toString()),
-          charts.ColorUtil.fromDartColor(Colors.blue)));
-      tdsData.add(TdsData(
-          index.toDouble(),
-          double.parse(value['tds'].toString()),
-          charts.ColorUtil.fromDartColor(Colors.red)));
-      temData.add(TemperatureData(
-          index.toDouble(),
-          double.parse(value['temperature'].toString()),
-          charts.ColorUtil.fromDartColor(Colors.green)));
-    });
-
     List<charts.Series<PhData, double>> seriesPh = [
       charts.Series(
           id: 'pH',
-          data: pHData,
+          data: phData,
           domainFn: (PhData data, _) => data.index,
           measureFn: (PhData data, _) => data.pH,
           colorFn: (PhData data, _) => data.barColor)
@@ -50,7 +34,7 @@ class ChartWidget extends StatelessWidget {
     List<charts.Series<TemperatureData, double>> seriesTem = [
       charts.Series(
           id: 'tds',
-          data: temData,
+          data: temperatureData,
           domainFn: (TemperatureData data, _) => data.index,
           measureFn: (TemperatureData data, _) => data.temperature,
           colorFn: (TemperatureData data, _) => data.barColor)

@@ -1,195 +1,197 @@
-import 'package:firebase_database/firebase_database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/database/Database.dart';
-import 'package:flutter/rendering.dart';
 
 class DataDayPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    //Khai báo ngày hiện tại
     DateTime now = DateTime.now();
+    String day = now.day.toString();
+    if (day.length == 1) day = '0' + day;
+    String month = now.month.toString();
+    if (month.length == 1) month = '0' + month;
+    String year = now.year.toString();
 
-    //Khai báo ngày dạng dd/mm/yyyy
-    String today = '${now.day}/${now.month}/${now.year}';
+    //Khai báo ngày dạng dd-mm-yyyy
+    String today = day + '-' + month + '-' + year;
 
-    return SingleChildScrollView(
-      child: Container(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
-        padding: EdgeInsets.all(8),
-
-        //Set background
-        decoration: BoxDecoration(gradient: BACKGROUND),
-
-        child: Column(
-          children: <Widget>[
-            //Build title
-            Container(
-              alignment: Alignment.center,
-              child: Text(
-                '$today',
-                style: TextStyle(fontSize: 36, color: Colors.black),
-              ),
-            ),
-            SizedBox(
-              height: 20,
-            ),
-            Text('Dữ liệu hiện tại', style: TITLE_STYLE),
-            SizedBox(
-              height: 10,
-            ),
-            StreamBuilder(
-              stream: Database.testRef.onValue,
-              builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                if (snapshot.hasData) {
-                  Map map = snapshot.data.snapshot.value;
-                  var ph = map['ph'];
-                  var tds = map['tds'];
-                  var tem = map['temperature'];
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: <Widget>[
-                      Column(
-                        children: <Widget>[
-                          Text('pH', style: DATA_TITLE_STYLE),
-                          Text('$ph', style: DATA_STYLE),
-                        ],
-                      ),
-                      Column(
-                        children: <Widget>[
-                          Text('TDS(ppm)', style: DATA_TITLE_STYLE),
-                          Text('$tds', style: DATA_STYLE),
-                        ],
-                      ),
-                      Column(
-                        children: <Widget>[
-                          Text('Nhiệt độ (°C)', style: DATA_TITLE_STYLE),
-                          Text(
-                            '$tem',
-                            style: DATA_STYLE,
-                          )
-                        ],
-                      )
-                    ],
-                  );
-                } else
-                  return CircularProgressIndicator(); //Loading
-              },
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  'Bơm',
-                  style: TITLE_STYLE,
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(gradient: BACKGROUND),
+        ),
+        Padding(
+          padding: EdgeInsets.only(left: 8, right: 8, top: 4),
+          child: CustomScrollView(
+            slivers: [
+              SliverList(
+                  delegate: SliverChildListDelegate([
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$today',
+                    style: TextStyle(fontSize: 36),
+                  ),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Align(
+                    alignment: Alignment.center,
+                    child: Text('Dữ liệu hiện tại', style: TITLE_STYLE)),
+                SizedBox(
+                  height: 10,
                 ),
                 StreamBuilder(
-                  stream: Database.ref.child('Pump').onValue,
-                  builder:
-                      (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                    return snapshot.hasData
-                        ? Switch(
-                            value: snapshot.data.snapshot.value,
-                            onChanged: (value) {
-                              Database.ref.child('Pump').set(value);
-                            },
-                            activeTrackColor: Colors.lightGreenAccent,
-                            activeColor: Colors.green,
-                          )
-                        : CircularProgressIndicator();
+                  stream: dataTestRef.snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData)
+                      return CircularProgressIndicator();
+                    else {
+                      DocumentSnapshot ds = snapshot.data;
+                      Map map = ds.data;
+                      return _buildTestFromMap(map);
+                    }
                   },
                 ),
-              ],
-            ),
-            SizedBox(
-              height: 30,
-            ),
-            Text(
-              'Dữ liệu trong ngày',
-              style: TITLE_STYLE,
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            //Build list data
-            StreamBuilder(
-              stream: Database.dataRef.onValue,
-              builder: (BuildContext context, AsyncSnapshot<Event> snapshot) {
-                if (snapshot.hasData) {
-                  List<dynamic> list = snapshot.data.snapshot.value;
-                  return _buildDataFromList(list, today);
-                } else
-                  return CircularProgressIndicator();
-              },
-            ),
-          ],
-        ),
-      ),
+                SizedBox(
+                  height: 30,
+                ),
+                Row(children: [
+                  Text(
+                    'Bơm',
+                    style: TITLE_STYLE,
+                  ),
+                  StreamBuilder(
+                    stream: pumpTestRef.snapshots(),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData)
+                        return CircularProgressIndicator();
+                      else {
+                        DocumentSnapshot ds = snapshot.data;
+                        Map map = ds.data;
+                        var active = map['active'];
+                        return _buildSwitchPump(active);
+                      }
+                    },
+                  ),
+                ]),
+                SizedBox(
+                  height: 30,
+                ),
+                Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    'Dữ liệu trong ngày',
+                    style: TITLE_STYLE,
+                  ),
+                ),
+                SizedBox(height: 10),
+                StreamBuilder(
+                  stream: orderDataRef.snapshots(),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData)
+                      return CircularProgressIndicator();
+                    else {
+                      QuerySnapshot list = snapshot.data;
+                      List<DocumentSnapshot> documents = list.documents;
+                      List<Map<String, dynamic>> maps =
+                          documents.map((e) => e.data).toList();
+                      return _buildDataFromMap(maps, today);
+                    }
+                  },
+                )
+              ]))
+            ],
+          ),
+        )
+      ],
     );
   }
 }
 
-_buildDataFromList(List<dynamic> list, String toDay) {
-  List<Widget> timeList = [];
-  List<Widget> phList = [];
-  List<Widget> tdsList = [];
-  List<Widget> temperatureList = [];
-  timeList.add(Text(
-    'Thời gian',
-    style: TextStyle(fontWeight: FontWeight.bold),
-  ));
-
-  phList.add(Text('pH', style: TextStyle(fontWeight: FontWeight.bold)));
-  tdsList.add(Text('TDS(ppm)', style: TextStyle(fontWeight: FontWeight.bold)));
-  temperatureList.add(
-      Text('Nhiệt độ (°C)', style: TextStyle(fontWeight: FontWeight.bold)));
-
-  var hasData = false;
-
-  list.asMap().forEach((key, value) {
-    var day = value['day'];
-
-    if (day == toDay) {
-      hasData = true;
-      var time = value['time'];
-      var ph = double.parse(value['ph'].toString());
-      var tds = double.parse(value['tds'].toString());
-      var temperature = double.parse(value['temperature'].toString());
-      timeList.add(Text(
-        '$time',
-        style: DATA_STYLE,
-      ));
-      phList.add(Text('${ph.toStringAsFixed(2)}', style: DATA_STYLE));
-      tdsList.add(Text('${tds.toStringAsFixed(0)}', style: DATA_STYLE));
-      temperatureList
-          .add(Text('${temperature.toStringAsFixed(2)}', style: DATA_STYLE));
+_buildDataFromMap(List<Map<String, dynamic>> maps, String today) {
+  List<Widget> list = [];
+  list.add(DefaultTextStyle(
+      style: TextStyle(fontWeight: FontWeight.bold),
+      child: Row(
+        children: [
+          Expanded(child: Text('Thời gian ')),
+          Expanded(child: Text('pH ')),
+          Expanded(child: Text('TDS(ppm)')),
+          Expanded(child: Text('Nhiệt độ (°C)')),
+        ],
+      )));
+  maps.forEach((map) {
+    if (map['day'] == today) {
+      list.add(DefaultTextStyle(
+          style: DATA_STYLE,
+          child: Row(
+            children: [
+              Expanded(child: Text('${map['time']}')),
+              Expanded(child: Text('${map['ph']}')),
+              Expanded(child: Text('${map['tds']}')),
+              Expanded(child: Text('${map['temperature']}')),
+            ],
+          )));
     }
   });
+  return Column(children: list);
+}
 
-  return hasData
-      ? Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: <Widget>[
-            Column(
-              children: timeList,
+_buildTestFromMap(Map map) {
+  return Column(
+    children: [
+      DefaultTextStyle(
+        style: TextStyle(fontWeight: FontWeight.bold),
+        child: Row(
+          children: [
+            Expanded(
+                child: Text(
+              'pH',
+            )),
+            Expanded(
+              child: Text(
+                'TDS(ppm)',
+              ),
             ),
-            Column(
-              children: phList,
-            ),
-            Column(
-              children: tdsList,
-            ),
-            Column(
-              children: temperatureList,
+            Expanded(
+              child: Text('Nhiệt độ (°C)'),
             ),
           ],
-        )
-      : Text(
-          'Hôm nay không có dữ liệu. Dữ liệu trống',
-          style: TITLE_STYLE,
-        );
+        ),
+      ),
+      DefaultTextStyle(
+        style: DATA_STYLE,
+        child: Row(
+          children: [
+            Expanded(
+                child: Text(
+              '${map['ph']}',
+            )),
+            Expanded(
+              child: Text('${map['tds']}'),
+            ),
+            Expanded(
+              child: Text('${map['temperature']}'),
+            ),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+_buildSwitchPump(bool active) {
+  return Switch(
+      activeTrackColor: Colors.lightGreen,
+      activeColor: Colors.green,
+      value: active,
+      onChanged: (value) {
+        Firestore.instance
+            .collection('test')
+            .document('pump')
+            .updateData({'active': value});
+      });
 }
