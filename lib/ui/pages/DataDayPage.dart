@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:thuycanh/configure/Configure.dart';
 import 'package:thuycanh/database/Database.dart';
+import 'dart:math';
 
 class DataDayPage extends StatelessWidget {
   @override
@@ -52,13 +53,31 @@ class DataDayPage extends StatelessWidget {
                       DocumentSnapshot ds = snapshot.data;
                       Map map = ds.data;
                       return _buildTestFromMap(map);
-                    }
+    }
                   },
                 ),
+                    Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children:[
+                          FloatingActionButton.extended(
+                            onPressed: () async {
+                              var random = new Random();
+                              Firestore.instance
+                                  .collection('test')
+                                  .document('read')
+                                  .updateData({'status': random.nextInt(1000)});
+                            },
+                            label: Text('Cập nhật',style: TextStyle(fontSize: 20),),
+                          ),
+                      ]
+                    ),
                 SizedBox(
                   height: 30,
                 ),
-                Row(children: [
+                Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+
                   Text(
                     'Bơm',
                     style: TITLE_STYLE,
@@ -132,7 +151,7 @@ _buildDataFromMap(List<Map<String, dynamic>> maps, String today) {
               Expanded(child: Text('${map['time']}')),
               Expanded(child: Text('${map['ph']}')),
               Expanded(child: Text('${map['tds']}')),
-              Expanded(child: Text('${map['temperature']}')),
+              Expanded(child: Text('${double.parse(map['temperature'].toString()).toStringAsFixed(2)}')),
             ],
           )));
     }
@@ -168,13 +187,13 @@ _buildTestFromMap(Map map) {
           children: [
             Expanded(
                 child: Text(
-              '${map['ph']}',
+              '${double.parse(map['ph'].toString()).toStringAsFixed(2)}',
             )),
             Expanded(
-              child: Text('${map['tds']}'),
+              child: Text('${map['tds'].toString()}'),
             ),
             Expanded(
-              child: Text('${map['temperature']}'),
+              child: Text('${double.parse(map['temperature'].toString()).toStringAsFixed(2)}'),
             ),
           ],
         ),

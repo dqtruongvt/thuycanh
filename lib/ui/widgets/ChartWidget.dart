@@ -48,7 +48,7 @@ class ChartWidget extends StatelessWidget {
               child: charts.LineChart(
                 seriesPh,
                 behaviors: [
-                  charts.ChartTitle('pH chart',
+                  charts.ChartTitle('Biểu đồ pH',
                       behaviorPosition: charts.BehaviorPosition.bottom,
                       titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
                       titleOutsideJustification:
@@ -61,7 +61,7 @@ class ChartWidget extends StatelessWidget {
               child: charts.LineChart(
                 seriesTds,
                 behaviors: [
-                  charts.ChartTitle('Tds chart',
+                  charts.ChartTitle('Biểu đồ TDS(ppm)',
                       behaviorPosition: charts.BehaviorPosition.bottom,
                       titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
                       titleOutsideJustification:
@@ -74,7 +74,7 @@ class ChartWidget extends StatelessWidget {
               child: charts.LineChart(
                 seriesTem,
                 behaviors: [
-                  charts.ChartTitle('Temperature chart',
+                  charts.ChartTitle('Biểu đồ nhiệt độ(°C)',
                       behaviorPosition: charts.BehaviorPosition.bottom,
                       titleStyleSpec: charts.TextStyleSpec(fontSize: 20),
                       titleOutsideJustification:

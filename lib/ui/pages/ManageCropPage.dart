@@ -225,9 +225,9 @@ _buildData(List<Map<String, dynamic>> listData, List<String> listId) {
       style: TextStyle(fontWeight: FontWeight.bold),
       child: Row(
         children: [
-          Expanded(child: Text('Ngày'), flex: 3,),
+          Expanded(child: Text('Ngày'), flex: 4,),
           Expanded(child: Text('pH'), flex: 2,),
-          Expanded(child: Text('TDS(ppm)'), flex: 2,),
+          Expanded(child: Text('TDS(ppm)'), flex: 3,),
           Expanded(child: Text('Nhiệt độ(°C)'), flex: 3,),
         ],
       )));
@@ -236,10 +236,10 @@ _buildData(List<Map<String, dynamic>> listData, List<String> listId) {
         style: DATA_STYLE,
         child: Row(
           children: [
-            Expanded(child: Text('${listId[listData.indexOf(map)]}'), flex:  3,),
-            Expanded(child: Text('${map['ph']}'), flex: 2,),
-            Expanded(child: Text('${map['tds']}'), flex:2),
-            Expanded(child: Text('${map['temperature']}'), flex: 3,),
+            Expanded(child: Text('${listId[listData.indexOf(map)]}'), flex:  4,),
+            Expanded(child: Text('${double.parse(map['ph'].toString()).toStringAsFixed(2)}'), flex: 2,),
+            Expanded(child: Text('${double.parse(map['tds'].toString()).toStringAsFixed(0)}'), flex:3),
+            Expanded(child: Text('${double.parse(map['temperature'].toString()).toStringAsFixed(2)}'), flex: 3,),
           ],
         )));
   });

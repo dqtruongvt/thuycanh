@@ -79,22 +79,18 @@ exports.createCropCollection = functions.firestore.document("caculate/sum").onUp
     });
 });
 
-exports.updateTest = functions.database.ref("test").onUpdate(async (snap, context) => {
-    var map = snap.after.val();
-    firestore.collection("test").doc("data").set(map);
-
-});
-
-exports.updatePumpFromFirebase = functions.database.ref("pump").onUpdate(async (snap, context) => {
-    var data = snap.after.val();
-    firestore.collection("test").doc("pump").update({ active: data });
+exports.updateTest = functions.firestore.document("test/read").onUpdate(async (snap, context) => {
+    admin.database().ref("test").once("value", (snap2) => {
+            var map = snap2.val();
+            firestore.collection("test").doc("data").set(map);
+        });
 });
 
 exports.updatePumpFromFirestore = functions.firestore.document("test/pump").onUpdate(async (snap, context) => {
     var data = snap.after.data();
     admin.database().ref("pump").set(data.active);
-
 });
+
 
 
 
